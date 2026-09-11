@@ -1,0 +1,852 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Framepop — future API contract draft",
+    "version": "0.1.0",
+    "description": "명세 초안. 정적 목업은 실제 API를 제공하지 않습니다."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/projects": {
+      "get": {
+        "summary": "프로젝트 목록·생성",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "post": {
+        "summary": "프로젝트 목록·생성",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "프로젝트 조회·수정",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "patch": {
+        "summary": "프로젝트 조회·수정",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/story": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "스토리 버전",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "put": {
+        "summary": "스토리 버전",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/timeline": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "타임라인",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "put": {
+        "summary": "타임라인",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/approvals": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "버전 확정",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/segments": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "세그먼트 상태",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/segments/{id}/qc": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "기준·내부·경계 QC",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections": {
+      "get": {
+        "summary": "연결 관리",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "post": {
+        "summary": "연결 관리",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "연결 수정·삭제",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "delete": {
+        "summary": "연결 수정·삭제",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}/models": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "계정별 모델",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}/test": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "연결 검사",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}/usage": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "구독 한도",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}/login": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "제공자 로그인",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/connections/{id}/logout": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "연결 해제",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/auth-sessions/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "인증 상태·취소",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "delete": {
+        "summary": "인증 상태·취소",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/orchestration": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "역할·Primary 배정",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "put": {
+        "summary": "역할·Primary 배정",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/data-policy": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "자료 전송 허용 대상",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "put": {
+        "summary": "자료 전송 허용 대상",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/prompt-pipelines": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "프롬프트 강화 구성",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      },
+      "post": {
+        "summary": "프롬프트 강화 구성",
+        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "responses": {
+          "200": {
+            "description": "성공"
+          },
+          "409": {
+            "description": "버전 또는 정책 충돌"
+          }
+        }
+      }
+    },
+    "/projects/{id}/jobs": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "작업 생성. 직전 세그먼트 QC 통과 후에만 다음 영상 제출",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "작업 접수",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/전송 정책/이전 QC 차단"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "작업 조회",
+        "responses": {
+          "200": {
+            "description": "작업 상태 또는 진행 이벤트",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/retry": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "작업 /retry",
+        "responses": {
+          "200": {
+            "description": "작업 상태 또는 진행 이벤트",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/cancel": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "작업 /cancel",
+        "responses": {
+          "200": {
+            "description": "작업 상태 또는 진행 이벤트",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/events": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "작업 /events",
+        "responses": {
+          "200": {
+            "description": "작업 상태 또는 진행 이벤트",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Job": {
+        "type": "object",
+        "required": [
+          "id",
+          "state",
+          "segmentIds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "generating",
+              "internal_qc",
+              "boundary_qc",
+              "review_required",
+              "passed",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "segmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inputVersion": {
+            "type": "integer"
+          },
+          "connectionId": {
+            "type": "string"
+          },
+          "modelId": {
+            "type": "string"
+          }
+        }
+      },
+      "JobRequest": {
+        "type": "object",
+        "required": [
+          "kind",
+          "inputVersion"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "analyze",
+              "image_generate",
+              "image_edit",
+              "video_generate",
+              "face_qc"
+            ]
+          },
+          "inputVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "segmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connectionId": {
+            "type": "string"
+          },
+          "modelId": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "AUTH_REQUIRED",
+              "POLICY_BLOCKED",
+              "QUOTA_EXCEEDED",
+              "OUTPUT_INVALID",
+              "VERSION_CONFLICT",
+              "CONNECTION_UNAVAILABLE"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthSession": {
+        "type": "object",
+        "required": [
+          "id",
+          "flow",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "flow": {
+            "enum": [
+              "browser",
+              "device_code"
+            ]
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "expired",
+              "denied",
+              "cancelled"
+            ]
+          },
+          "verificationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "userCode": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
