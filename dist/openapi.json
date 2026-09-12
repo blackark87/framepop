@@ -1,565 +1,429 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Framepop — future API contract draft",
-    "version": "0.1.0",
-    "description": "명세 초안. 정적 목업은 실제 API를 제공하지 않습니다."
+    "title": "Framepop 실행 API",
+    "version": "1.0.0",
+    "description": "실제 Node 서버 계약. 기존 목업 명세와 분리. 인증 토큰·OAuth 자격 증명·프레임 얼굴 임베딩은 외부 서비스로 자동 전송하지 않는다."
   },
   "servers": [
     {
-      "url": "/api/v1"
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    },
+    {
+      "bearer": []
     }
   ],
   "paths": {
-    "/projects": {
-      "get": {
-        "summary": "프로젝트 목록·생성",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
+    "/api/session": {
       "post": {
-        "summary": "프로젝트 목록·생성",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "summary": "접속 코드로 브라우저 세션 생성",
+        "description": "",
         "responses": {
           "200": {
-            "description": "성공"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "409": {
-            "description": "버전 또는 정책 충돌"
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/bootstrap": {
+      "get": {
+        "summary": "프로젝트·레퍼런스·설정·실행 기록",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "settings": {
+                      "$ref": "#/components/schemas/Settings"
+                    },
+                    "projects": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Project"
+                      }
+                    },
+                    "references": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Reference"
+                      }
+                    },
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Job"
+                      }
+                    },
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/projects/{id}": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "프로젝트 조회·수정",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "patch": {
-        "summary": "프로젝트 조회·수정",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/story": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "스토리 버전",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
+    "/api/settings": {
       "put": {
-        "summary": "스토리 버전",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "summary": "전역 설정 저장",
+        "description": "revision 일치 필요. 누락된 기존 token은 유지하고 응답에는 반환하지 않는다. 역할/강화/ComfyUI 선택은 전역에만 존재한다.",
         "responses": {
           "200": {
-            "description": "성공"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "409": {
-            "description": "버전 또는 정책 충돌"
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Settings"
+              }
+            }
           }
         }
       }
     },
-    "/projects/{id}/timeline": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "타임라인",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "put": {
-        "summary": "타임라인",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/approvals": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
+    "/api/connections/{id}/models": {
       "post": {
-        "summary": "버전 확정",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
+        "summary": "실제 모델·LoRA 목록 조회",
+        "description": "",
         "responses": {
           "200": {
-            "description": "성공"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Inventory"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "models": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": []
+                          }
+                        },
+                        "settings": {
+                          "$ref": "#/components/schemas/Settings"
+                        }
+                      },
+                      "required": []
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/segments": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "세그먼트 상태",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
-          "409": {
-            "description": "버전 또는 정책 충돌"
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
-      }
-    },
-    "/segments/{id}/qc": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "기준·내부·경계 QC",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections": {
-      "get": {
-        "summary": "연결 관리",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "post": {
-        "summary": "연결 관리",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "patch": {
-        "summary": "연결 수정·삭제",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "delete": {
-        "summary": "연결 수정·삭제",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}/models": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "계정별 모델",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}/test": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "연결 검사",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}/usage": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "구독 한도",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}/login": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "제공자 로그인",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/connections/{id}/logout": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "연결 해제",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/auth-sessions/{id}": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "인증 상태·취소",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "delete": {
-        "summary": "인증 상태·취소",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/orchestration": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "역할·Primary 배정",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "put": {
-        "summary": "역할·Primary 배정",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/data-policy": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "자료 전송 허용 대상",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "put": {
-        "summary": "자료 전송 허용 대상",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/prompt-pipelines": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "프롬프트 강화 구성",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      },
-      "post": {
-        "summary": "프롬프트 강화 구성",
-        "description": "후속 서버 구현 계약 초안. 정적 목업에서는 호출하지 않습니다. 세부 도메인 요청 스키마는 PLAN.md를 기준으로 후속 확정합니다.",
-        "responses": {
-          "200": {
-            "description": "성공"
-          },
-          "409": {
-            "description": "버전 또는 정책 충돌"
-          }
-        }
-      }
-    },
-    "/projects/{id}/jobs": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "작업 생성. 직전 세그먼트 QC 통과 후에만 다음 영상 제출",
+        },
         "parameters": [
           {
-            "in": "header",
-            "name": "Idempotency-Key",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/projects": {
+      "post": {
+        "summary": "프로젝트 생성",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "patch": {
+        "summary": "시놉시스·선택 프로파일·재생 시간 저장",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -571,14 +435,130 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JobRequest"
+                "type": "object",
+                "properties": {
+                  "revision": {
+                    "type": "integer"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "synopsis": {
+                    "type": "string"
+                  },
+                  "modelProfile": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3600
+                  },
+                  "mode": {
+                    "enum": [
+                      "local",
+                      "mixed"
+                    ]
+                  },
+                  "referenceId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/approve": {
+      "post": {
+        "summary": "최신 이야기·타임라인 확정",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "revision": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs": {
+      "post": {
+        "summary": "작업 실행",
+        "description": "plan/revise/video는 projectId 필수. 같은 프로젝트의 동시 작업은 차단. revise는 constraints를 받아 전체 story/plot/timeline을 재생성. enhance는 target과 prompt 또는 profile 필요. image는 prompt 필수. profile/reference는 선택. video는 승인된 최신 plan 필요. recommend는 전역 선택 LoRA의 출처·강도를 확인.",
         "responses": {
           "202": {
-            "description": "작업 접수",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -587,28 +567,66 @@
               }
             }
           },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "409": {
-            "description": "버전/전송 정책/이전 QC 차단"
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "description": "같은 제출을 재시도할 때 같은 키 사용. 다른 본문에 재사용 시 409."
+          }
+        ]
       }
     },
-    "/jobs/{id}": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
+    "/api/jobs/{id}": {
       "get": {
-        "summary": "작업 조회",
+        "summary": "작업 상태·결과 조회",
+        "description": "",
         "responses": {
           "200": {
-            "description": "작업 상태 또는 진행 이벤트",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -616,26 +634,57 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
-    "/jobs/{id}/retry": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
+    "/api/jobs/{id}/retry": {
       "post": {
-        "summary": "작업 /retry",
+        "summary": "저장된 실행 재개 또는 실패 구간 재생성",
+        "description": "프로젝트·서버 자산 버전이 일치해야 한다. 완료 구간은 보존. QC 실패 구간만 새 seed로 재생성.",
         "responses": {
           "200": {
-            "description": "작업 상태 또는 진행 이벤트",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -643,26 +692,57 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
-    "/jobs/{id}/cancel": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
+    "/api/jobs/{id}/cancel": {
       "post": {
-        "summary": "작업 /cancel",
+        "summary": "다음 단계 중단 및 원격 작업 취소 요청",
+        "description": "ComfyUI 개별 취소 API 미지원/통신 실패는 remote_cancel_unconfirmed 이벤트로 기록.",
         "responses": {
           "200": {
-            "description": "작업 상태 또는 진행 이벤트",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -670,26 +750,57 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
-    "/jobs/{id}/events": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "id",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
+    "/api/jobs/{id}/events": {
       "get": {
-        "summary": "작업 /events",
+        "summary": "작업 이벤트 SSE 재생·실시간 수신",
+        "description": "",
         "responses": {
           "200": {
-            "description": "작업 상태 또는 진행 이벤트",
+            "description": "SSE: id = seq; data = Event JSON. 15초 heartbeat. 백분율은 실제 노드 step에만 적용.",
             "content": {
               "text/event-stream": {
                 "schema": {
@@ -697,155 +808,981 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/codex": {
+      "post": {
+        "summary": "codex 구독 device 로그인 시작",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
+      },
+      "get": {
+        "summary": "OpenAI 구독 인증 상태",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/xai": {
+      "post": {
+        "summary": "xai 구독 device 로그인 시작",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/codex/{id}": {
+      "get": {
+        "summary": "OpenAI 로그인 요청별 승인 상태",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/xai/{id}": {
+      "get": {
+        "summary": "xAI 로그인 진행 상태",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or job busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or execution prerequisite failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/media/{filename}": {
+      "get": {
+        "summary": "보호된 이미지·영상 파일",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "전체 미디어"
+          },
+          "206": {
+            "description": "byte range"
+          },
+          "401": {
+            "description": "접속 코드 필요"
+          },
+          "416": {
+            "description": "잘못된 범위"
+          }
+        },
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "framepop"
+      },
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
     "schemas": {
-      "Job": {
+      "Error": {
         "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
         "required": [
-          "id",
-          "state",
-          "segmentIds"
-        ],
+          "error"
+        ]
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "connectionId",
+          "model"
+        ]
+      },
+      "Connection": {
+        "type": "object",
         "properties": {
           "id": {
             "type": "string"
           },
-          "state": {
-            "type": "string",
+          "name": {
+            "type": "string"
+          },
+          "kind": {
             "enum": [
-              "waiting",
-              "generating",
-              "internal_qc",
-              "boundary_qc",
-              "review_required",
-              "passed",
-              "failed",
-              "cancelled"
+              "ollama",
+              "lmstudio",
+              "codex",
+              "xai",
+              "comfy",
+              "openclaw"
             ]
           },
-          "segmentIds": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "token": {
+            "type": "string",
+            "writeOnly": true
+          },
+          "hasToken": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "models": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": []
             }
-          },
-          "blockedReason": {
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind"
+        ]
+      },
+      "ComfySelection": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
             "type": [
               "string",
               "null"
             ]
           },
-          "inputVersion": {
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "imageModel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "loras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "imageLoras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "connectionId",
+          "loras"
+        ]
+      },
+      "Settings": {
+        "type": "object",
+        "properties": {
+          "revision": {
             "type": "integer"
           },
-          "connectionId": {
+          "connections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Connection"
+            }
+          },
+          "assignmentMode": {
+            "enum": [
+              "auto",
+              "manual"
+            ]
+          },
+          "primary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Assignment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roles": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Assignment"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "comfy": {
+            "$ref": "#/components/schemas/ComfySelection"
+          },
+          "enhancementInstruction": {
             "type": "string"
           },
-          "modelId": {
-            "type": "string"
+          "qc": {
+            "type": "object",
+            "properties": {
+              "minSimilarity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "minSharpness": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "maxBadFraction": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMaximum": 1
+              }
+            },
+            "required": [
+              "minSimilarity",
+              "minSharpness",
+              "maxBadFraction"
+            ]
           }
-        }
+        },
+        "required": [
+          "revision",
+          "connections",
+          "assignmentMode",
+          "roles",
+          "comfy",
+          "enhancementInstruction",
+          "qc"
+        ]
+      },
+      "Segment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15
+          },
+          "expectsFaces": {
+            "type": "boolean"
+          },
+          "continuous": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "prompt",
+          "duration"
+        ]
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            }
+          }
+        },
+        "required": [
+          "segments"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "synopsis": {
+            "type": "string"
+          },
+          "modelProfile": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
+          "mode": {
+            "enum": [
+              "local",
+              "mixed"
+            ]
+          },
+          "referenceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "pendingRevision": {
+            "type": "boolean"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "story": {
+            "type": "object",
+            "properties": {
+              "plot": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "story": {
+                "type": "string"
+              }
+            },
+            "required": []
+          }
+        },
+        "required": []
+      },
+      "Constraint": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ]
       },
       "JobRequest": {
         "type": "object",
-        "required": [
-          "kind",
-          "inputVersion"
-        ],
         "properties": {
           "kind": {
-            "type": "string",
             "enum": [
-              "analyze",
-              "image_generate",
-              "image_edit",
-              "video_generate",
-              "face_qc"
+              "plan",
+              "revise",
+              "enhance",
+              "image",
+              "video",
+              "recommend"
             ]
           },
-          "inputVersion": {
-            "type": "integer",
-            "minimum": 1
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
-          "segmentIds": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Constraint"
+                }
+              },
+              "target": {
+                "enum": [
+                  "image",
+                  "video"
+                ]
+              },
+              "prompt": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "selection": {
+                "$ref": "#/components/schemas/ComfySelection"
+              },
+              "seed": {
+                "type": "integer"
+              }
+            },
+            "required": []
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projectRevision": {
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "review_required",
+              "interrupted",
+              "cancelled"
+            ]
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "integer"
+          },
+          "progress": {
+            "type": "object"
+          },
+          "segments": {
+            "type": "object"
+          },
+          "snapshot": {
+            "type": "object"
+          },
+          "artifacts": {
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "connectionId": {
+          "error": {
             "type": "string"
           },
-          "modelId": {
-            "type": "string"
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "required": [
-          "code",
-          "message"
-        ],
-        "properties": {
           "code": {
-            "type": "string",
-            "enum": [
-              "AUTH_REQUIRED",
-              "POLICY_BLOCKED",
-              "QUOTA_EXCEEDED",
-              "OUTPUT_INVALID",
-              "VERSION_CONFLICT",
-              "CONNECTION_UNAVAILABLE"
-            ]
-          },
-          "message": {
             "type": "string"
           },
-          "retryable": {
-            "type": "boolean"
+          "result": {
+            "type": "object"
           }
-        }
-      },
-      "AuthSession": {
-        "type": "object",
+        },
         "required": [
           "id",
-          "flow",
+          "kind",
           "status"
-        ],
+        ]
+      },
+      "Reference": {
+        "type": "object",
         "properties": {
           "id": {
             "type": "string"
           },
-          "flow": {
-            "enum": [
-              "browser",
-              "device_code"
-            ]
+          "name": {
+            "type": "string"
           },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "expired",
-              "denied",
-              "cancelled"
-            ]
+          "profile": {
+            "type": "string"
           },
-          "verificationUrl": {
+          "prompt": {
+            "type": "string"
+          },
+          "imageKey": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer"
+          }
+        },
+        "required": []
+      },
+      "Inventory": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "object"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": []
+            }
+          },
+          "loras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "textEncoders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vaes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "hashSupport": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer"
+          },
+          "at": {
             "type": "string",
-            "format": "uri"
+            "format": "date-time"
           },
-          "userCode": {
+          "phase": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "segmentId": {
+            "type": "string"
+          },
+          "segmentIndex": {
+            "type": "integer"
+          },
+          "totalSegments": {
+            "type": "integer"
+          },
+          "node": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "framesChecked": {
+            "type": "integer"
+          },
+          "tokens": {
+            "type": "integer"
+          },
+          "error": {
             "type": "string"
           }
-        }
+        },
+        "required": []
       }
     }
   }

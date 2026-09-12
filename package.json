@@ -1,0 +1,15 @@
+{
+  "name": "framepop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check dist/live.js && node --test test/*.test.mjs",
+    "qc:install": "python3 scripts/install_qc.py"
+  }
+}
