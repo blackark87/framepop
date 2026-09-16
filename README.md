@@ -65,3 +65,7 @@ npm test
 - [OpenClaw xAI 구독 인증](https://docs.openclaw.ai/providers/xai)
 - [Ollama Chat API](https://docs.ollama.com/api/chat)
 - [OpenCV 모델](https://github.com/opencv/opencv_zoo)
+
+## 화면 문구 원칙
+
+부가 설명을 기본으로 넣지 않습니다. 동작·조건·상태는 버튼, 필드, 선택 상태, 진행 표시로 전달합니다. 화면 조작만으로 해결할 수 없는 오류·외부 설정 조건에만 필요한 안내를 표시합니다. 생성된 이야기, 사용자 프로파일, 실제 작업 결과와 진행 정보는 설명 문구로 취급하지 않습니다.
