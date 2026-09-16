@@ -256,16 +256,18 @@ function video() {
     head(
       "영상·검수",
       "",
-      `<button class="primary" data-action="video" ${!p.approved || busy(p.id) ? "disabled" : ""}>영상 생성</button>`,
+      job?.status === "review_required"
+        ? `<button class="primary" data-action="retry" data-id="${job.id}">실패 구간 재생성</button>`
+        : `<button class="primary" data-action="video" ${!p.approved || busy(p.id) ? "disabled" : ""}>${job?.status === "completed" ? "영상 다시 생성" : "영상 생성"}</button>`,
     ) +
-    `<section class="card"><div class="row between"><h2>${completed} / ${s.length} 구간 검수 완료</h2><span class="pill">${p.approved ? "생성 준비됨" : "기획·타임라인 확정 필요"}</span></div><div class="progress"><div style="width:${s.length ? (completed / s.length) * 100 : 0}%"></div></div><div class="segments">${s
+    `<section class="card"><div class="row between"><h2>${completed} / ${s.length} 구간 검수 완료</h2><span class="pill">${job?.status === "review_required" ? "검수 확인 필요" : job?.status === "completed" ? "완료" : busy(p.id) ? "작업 중" : p.approved ? "생성 준비됨" : "기획·타임라인 확정 필요"}</span></div><div class="progress"><div style="width:${s.length ? (completed / s.length) * 100 : 0}%"></div></div><div class="segments">${s
       .map((segment, i) => {
         const q = job?.segments[segment.id]?.qc;
         return `<button class="seg ${i === segmentIndex ? "selected" : ""} ${q?.status === "pass" ? "pass" : q ? "fail" : ""}" aria-pressed="${i === segmentIndex}" data-segment="${i}">${i + 1} ${q?.status === "pass" ? "✓" : ""}</button>`;
       })
       .join(
         "",
-      )}</div></section>${s[segmentIndex] ? `<section class="card"><h2>${esc(s[segmentIndex].title)}</h2>${job?.segments[s[segmentIndex].id]?.file ? `<video class="scene-img" controls playsinline src="/media/${job.segments[s[segmentIndex].id].file.key}"></video>` : '<div class="media-empty">미생성</div>'}${job?.segments[s[segmentIndex].id]?.qc ? `<div class="checks"><div class="check"><span>Face QC</span><b>${esc(job.segments[s[segmentIndex].id].qc.status)}</b></div><div class="check"><span>검사 프레임</span><b>${job.segments[s[segmentIndex].id].qc.framesChecked}</b></div><div class="check"><span>문제 프레임</span><b>${job.segments[s[segmentIndex].id].qc.badFrames ?? "—"}</b></div><div class="check"><span>연결부 얼굴</span><b>${job.segments[s[segmentIndex].id].qc.boundaryPassed ? "통과" : "확인 필요"}</b></div></div>` : ""}</section>` : ""}${job?.snapshot ? `<section class="card"><h2>적용 모델·LoRA</h2><p>${esc(job.snapshot.model)}</p>${job.snapshot.loras.map((l) => `<p>${esc(l.name)} · 강도 ${l.strength}<a target="_blank" rel="noopener" href="${esc(l.source.url)}">권장값 출처 ↗</a></p>`).join("")}</section>` : ""}${job?.result?.videoKey ? `<section class="card"><h2>완성 영상</h2><video class="scene-img" controls src="/media/${job.result.videoKey}"></video><a href="/media/${job.result.videoKey}" download>영상 다운로드</a></section>` : ""}`
+      )}</div></section>${s[segmentIndex] ? `<section class="card"><h2>${esc(s[segmentIndex].title)}</h2>${job?.segments[s[segmentIndex].id]?.file ? `<video class="scene-img" controls playsinline src="/media/${job.segments[s[segmentIndex].id].file.key}"></video>` : '<div class="media-empty">미생성</div>'}${job?.segments[s[segmentIndex].id]?.qc ? `<div class="checks"><div class="check"><span>Face QC</span><b>${esc({ pass: "통과", fail: "확인 필요", no_face: "얼굴 없음" }[job.segments[s[segmentIndex].id].qc.status] || job.segments[s[segmentIndex].id].qc.status)}</b></div><div class="check"><span>검사 프레임</span><b>${job.segments[s[segmentIndex].id].qc.framesChecked}</b></div><div class="check"><span>문제 프레임</span><b>${job.segments[s[segmentIndex].id].qc.badFrames ?? "—"}</b></div><div class="check"><span>연결부 얼굴</span><b>${job.segments[s[segmentIndex].id].qc.boundaryPassed ? "통과" : "확인 필요"}</b></div></div>` : ""}</section>` : ""}${job?.snapshot ? `<section class="card"><h2>적용 모델·LoRA</h2><p>${esc(job.snapshot.model)}</p>${job.snapshot.loras.map((l) => `<p>${esc(l.name)} · 강도 ${l.strength}<a target="_blank" rel="noopener" href="${esc(l.source.url)}">권장값 출처 ↗</a></p>`).join("")}</section>` : ""}${job?.result?.videoKey ? `<section class="card"><h2>완성 영상</h2><video class="scene-img" controls src="/media/${job.result.videoKey}"></video><a href="/media/${job.result.videoKey}" download>영상 다운로드</a></section>` : ""}`
   );
 }
 function references() {
@@ -286,7 +288,7 @@ function settings() {
     ]
       .map(
         ([key, name]) =>
-          `<button data-tab="${key}" class="${tab === key ? "active" : ""}">${name}</button>`,
+          `<button data-tab="${key}" class="${tab === key ? "active" : ""}" aria-pressed="${tab === key}">${name}</button>`,
       )
       .join("")}</div>` +
     (tab === "connections"
@@ -382,7 +384,7 @@ function comfySettings() {
               .map((m) => m.name),
             c.imageModel,
           ),
-        )}<h3>영상용 LoRA (복수 선택)</h3><div class="lora-list">${inventory.loras.map((name) => `<label class="lora-choice"><input type="checkbox" data-lora="${esc(name)}" ${c.loras.includes(name) ? "checked" : ""}><span>${esc(name)}</span></label>`).join("") || '<span class="pill">0개</span>'}</div><h3>이미지용 LoRA (복수 선택)</h3><div class="lora-list">${inventory.loras.map((name) => `<label class="lora-choice"><input type="checkbox" data-image-lora="${esc(name)}" ${(c.imageLoras || []).includes(name) ? "checked" : ""}><span>${esc(name)}</span></label>`).join("") || '<span class="pill">0개</span>'}</div>${!inventory.hashSupport && ((c.loras || []).length || (c.imageLoras || []).length) ? '<p class="field-error">LoRA의 정확한 배포 버전을 찾으려면 서버에 framepop_assets 확장을 설치해 주세요.</p>' : ""}<button data-action="saveComfy">사용 자산 저장</button><button data-action="recommend">영상 권장 강도 확인</button><button data-action="recommendImage">이미지 권장 강도 확인</button></div>`
+        )}<h3>영상용 LoRA (복수 선택)</h3><div class="lora-list">${inventory.loras.map((name) => `<label class="lora-choice"><input type="checkbox" data-lora="${esc(name)}" ${c.loras.includes(name) ? "checked" : ""}><span>${esc(name)}</span></label>`).join("") || '<span class="pill">0개</span>'}</div><h3>이미지용 LoRA (복수 선택)</h3><div class="lora-list">${inventory.loras.map((name) => `<label class="lora-choice"><input type="checkbox" data-image-lora="${esc(name)}" ${(c.imageLoras || []).includes(name) ? "checked" : ""}><span>${esc(name)}</span></label>`).join("") || '<span class="pill">0개</span>'}</div>${!inventory.hashSupport && ((c.loras || []).length || (c.imageLoras || []).length) ? '<p class="field-error">LoRA의 정확한 배포 버전을 찾으려면 서버에 framepop_assets 확장을 설치해 주세요.</p>' : ""}<div class="button-row"><button class="primary" data-action="saveComfy">사용 자산 저장</button><button data-action="recommend">영상 권장 강도 확인</button><button data-action="recommendImage">이미지 권장 강도 확인</button></div></div>`
       : ""
   }</section>`;
 }
@@ -392,7 +394,7 @@ function render() {
   $("#nav").innerHTML = ["projects", "references", "settings"]
     .map(
       (k) =>
-        `<button data-page="${k}" class="${p === k ? "active" : ""}">${titles[k]}</button>`,
+        `<button data-page="${k}" class="${p === k || (inProject && k === "projects") ? "active" : ""}" aria-current="${p === k || (inProject && k === "projects") ? "page" : "false"}">${titles[k]}</button>`,
     )
     .join("");
   $("#breadcrumb").innerHTML =
@@ -472,11 +474,14 @@ async function startJob(kind, input = {}, projectId = project()?.id) {
   render();
   return j;
 }
-function dialog(html) {
+function dialogActions(primary = "") {
+  return `<div class="dialog-actions"><button data-action="close">닫기</button>${primary}</div>`;
+}
+function dialog(html, actions = "") {
   stopAuthWatch();
   $("#modal").innerHTML =
-    html +
-    '<div class="actions"><button data-action="close">닫기</button></div>';
+    html.replace("<h2>", '<h2 id="dialog-title">') +
+    (actions === false ? "" : dialogActions(actions));
   $("#modal").showModal();
 }
 const subscriptionName = (kind) => (kind === "codex" ? "OpenAI" : "xAI");
@@ -487,25 +492,30 @@ function stopAuthWatch() {
   authFlow = null;
 }
 function connectionDetails(kind, c = {}) {
-  if (isSubscription(kind))
-    return `<button class="primary" data-action="saveConnection">${subscriptionName(kind)} 구독으로 연결</button>`;
-  return `${field("서버 주소 · 필수", "connectionUrl", c.url)}${field("서버 인증 토큰 (선택)", "connectionToken", "", "password")}<button class="primary" data-action="saveConnection">연결 저장</button>`;
+  const button = `<button class="primary" data-action="saveConnection">${isSubscription(kind) ? subscriptionName(kind) + " 구독으로 연결" : "연결 저장"}</button>`;
+  return (
+    (isSubscription(kind)
+      ? ""
+      : `${field("서버 주소 · 필수", "connectionUrl", c.url)}${field("서버 인증 토큰 (선택)", "connectionToken", "", "password")}`) +
+    dialogActions(button)
+  );
 }
 function authMarkup(flow, state = {}) {
   const url = state.verificationUrl || state.authUrl || state.url;
   const code = state.userCode || state.code;
   const retry = `<button data-auth="${flow.provider}" data-auth-connection="${flow.connectionId}">다시 로그인</button>`;
   if (state.status === "completed")
-    return `<h2>${flow.name} 구독 연결 완료</h2><span class="pill">모델 ${state.modelCount}개</span><button class="primary" data-action="openRoles">역할 배정으로</button>`;
+    return `<h2>${flow.name} 구독 연결 완료</h2><div class="dialog-status"><span class="pill">모델 ${state.modelCount}개</span></div>${dialogActions('<button class="primary" data-action="openRoles">역할 배정으로</button>')}`;
   if (["failed", "expired"].includes(state.status))
-    return `<h2>${flow.name} 연결 확인 필요</h2><p class="field-error" role="alert">${esc(state.error || "로그인 확인 시간이 지났습니다. 다시 시작해 주세요.")}</p>${retry}`;
-  return `<h2>${flow.name} 구독 로그인</h2>${url ? `<a class="auth-link primary" target="_blank" rel="noopener noreferrer" href="${esc(url)}">${flow.name} 로그인 페이지 열기 ↗</a>${code ? `<div class="auth-code"><span>기기 코드</span><strong>${esc(code)}</strong></div>` : ""}` : ""}<p id="authStatus" role="status">${url ? "승인 대기" : "로그인 준비 중…"}</p><button data-action="checkAuth">상태 다시 확인</button>`;
+    return `<h2>${flow.name} 연결 확인 필요</h2><p class="field-error" role="alert">${esc(state.error || "로그인 확인 시간이 지났습니다. 다시 시작해 주세요.")}</p>${dialogActions(retry)}`;
+  return `<h2>${flow.name} 구독 로그인</h2>${url ? `<a class="auth-link primary" target="_blank" rel="noopener noreferrer" href="${esc(url)}">${flow.name} 로그인 페이지 열기 ↗</a>${code ? `<div class="auth-code"><span>기기 코드</span><strong>${esc(code)}</strong></div>` : ""}` : ""}<p id="authStatus" role="status">${url ? "승인 대기" : "로그인 준비 중…"}</p>${dialogActions('<button data-action="checkAuth">상태 다시 확인</button>')}`;
 }
 function showAuth(flow, state) {
   if (authFlow !== flow || !$("#modal").open) return;
-  $("#modal").innerHTML =
-    authMarkup(flow, state) +
-    '<div class="actions"><button data-action="close">닫기</button></div>';
+  $("#modal").innerHTML = authMarkup(flow, state).replace(
+    "<h2>",
+    '<h2 id="dialog-title">',
+  );
 }
 async function checkAuth(flow) {
   if (!flow || authFlow !== flow || flow.checking || !$("#modal").open) return;
@@ -628,10 +638,16 @@ async function action(a, b) {
   }
   if (a === "newProject")
     return dialog(
-      `<h2>새 프로젝트</h2>${field("프로젝트 이름 · 필수", "newTitle")}<button class="primary" data-action="createProject">만들기</button>`,
+      `<h2>새 프로젝트</h2>${field("프로젝트 이름 · 필수", "newTitle")}`,
+      '<button class="primary" data-action="createProject">만들기</button>',
     );
   if (a === "createProject") {
-    const p = await api("/projects", "POST", { title: $("#newTitle").value });
+    const title = $("#newTitle").value.trim();
+    if (!title) {
+      markInvalid("#newTitle");
+      throw Error("프로젝트 이름이 필요합니다.");
+    }
+    const p = await api("/projects", "POST", { title });
     data.projects.unshift(p);
     selected = p.id;
     localStorage.setItem("framepop-live-project", selected);
@@ -677,7 +693,8 @@ async function action(a, b) {
     const s = project().plan.segments[segmentIndex];
     if (a === "revise")
       return dialog(
-        `<h2>구간 수정 요청</h2>${field("수정할 구간 내용", "segmentPrompt", s.prompt, "textarea")}${field("길이 (초)", "segmentDuration", s.duration, "number")}<button data-action="submitRevision">수정 반영</button>`,
+        `<h2>구간 수정 요청</h2>${field("수정할 구간 내용", "segmentPrompt", s.prompt, "textarea")}${field("길이 (초)", "segmentDuration", s.duration, "number")}`,
+        '<button class="primary" data-action="submitRevision">수정 반영</button>',
       );
     const constraints =
       a === "deleteSegment"
@@ -746,6 +763,7 @@ async function action(a, b) {
           c.kind,
         ),
       )}<div id="connectionDetails">${connectionDetails(c.kind, c)}</div>`,
+      false,
     );
   }
   if (a === "saveConnection") {
@@ -871,6 +889,9 @@ document.addEventListener("click", async (e) => {
       segmentIndex = Number(b.dataset.segment);
       render();
       if ($(".timeline")) $(".timeline").scrollLeft = x;
+      document
+        .querySelector(`[data-segment="${segmentIndex}"]`)
+        ?.focus({ preventScroll: true });
       scrollTo(0, y);
       return;
     }
