@@ -75,6 +75,7 @@ export const defaults = () => ({
     imageLoras: [],
     textEncoder: null,
     vae: null,
+    audioVae: null,
   },
   qc: {
     minSimilarity: 0.363,

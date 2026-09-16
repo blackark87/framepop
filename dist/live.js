@@ -325,17 +325,53 @@ function comfySettings() {
   return `<section class="card">${field("ComfyUI 서버", "comfyConnection", c.connectionId, "select", opts(connections, c.connectionId))}<button data-action="scanComfy">설치 모델·LoRA 조회</button>${
     inventory
       ? `<div style="margin-top:20px">${field(
-          "영상 모델",
+          "영상 모델 · H3 FL2VA",
           "videoModel",
           c.model,
           "select",
           opts(
             inventory.models
-              .filter((m) => m.type === "diffusion_models")
+              .filter(
+                (m) =>
+                  m.type === "diffusion_models" &&
+                  /minimax[_-]h3.*fl2va/i.test(m.name),
+              )
               .map((m) => m.name),
             c.model,
           ),
-        )}${field(
+        )}<details><summary>H3 인코더·VAE</summary>${[
+          [
+            "textEncoder",
+            "텍스트 인코더",
+            inventory.textEncoders.filter((n) =>
+              /qwen3.*minimax[_-]h3/i.test(n),
+            ),
+          ],
+          [
+            "vae",
+            "영상 VAE",
+            inventory.vaes.filter((n) =>
+              /minimax[_-]h3[_-]video[_-]vae/i.test(n),
+            ),
+          ],
+          [
+            "audioVae",
+            "오디오 VAE",
+            inventory.vaes.filter((n) =>
+              /minimax[_-]h3[_-]audio[_-]vae/i.test(n),
+            ),
+          ],
+        ]
+          .map(([key, label, files]) =>
+            field(
+              label,
+              key,
+              c[key],
+              "select",
+              `<option value="">자동 선택</option>${files.map((name) => `<option value="${esc(name)}" ${c[key] === name ? "selected" : ""}>${esc(name)}</option>`).join("")}`,
+            ),
+          )
+          .join("")}</details>${field(
           "이미지 모델",
           "imageModel",
           c.imageModel,
@@ -795,6 +831,9 @@ async function action(a, b) {
       connectionId: $("#comfyConnection").value,
       model: $("#videoModel").value,
       imageModel: $("#imageModel").value,
+      textEncoder: $("#textEncoder").value || null,
+      vae: $("#vae").value || null,
+      audioVae: $("#audioVae").value || null,
       loras: [...document.querySelectorAll("[data-lora]:checked")].map(
         (e) => e.dataset.lora,
       ),

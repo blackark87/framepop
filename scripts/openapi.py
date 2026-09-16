@@ -9,8 +9,9 @@ assignment=obj({'connectionId':string,'model':string},['connectionId','model'])
 schemas={
 'Error':obj({'error':obj({'code':string,'message':string},['code','message'])},['error']),
 'Assignment':assignment,
+'AuthSession':obj({'id':string,'status':{'enum':['pending','completed','failed','expired','cancelled']},'url':{'type':'string','format':'uri'},'code':string,'createdAt':integer,'expiresAt':integer,'error':string},['id','status']),
 'Connection':obj({'id':string,'name':string,'kind':{'enum':['ollama','lmstudio','codex','xai','comfy','openclaw']},'url':{'type':'string','format':'uri'},'token':{'type':'string','writeOnly':True},'hasToken':{'type':'boolean','readOnly':True},'models':array(obj({'id':string,'name':string}))},['id','name','kind']),
-'ComfySelection':obj({'connectionId':{'type':['string','null']},'model':{'type':['string','null']},'imageModel':{'type':['string','null']},'loras':{'type':'array','items':string,'uniqueItems':True},'imageLoras':{'type':'array','items':string,'uniqueItems':True}},['connectionId','loras']),
+'ComfySelection':obj({'connectionId':{'type':['string','null']},'model':{'type':['string','null']},'imageModel':{'type':['string','null']},'textEncoder':{'type':['string','null']},'vae':{'type':['string','null']},'audioVae':{'type':['string','null']},'loras':{'type':'array','items':string,'uniqueItems':True},'imageLoras':{'type':'array','items':string,'uniqueItems':True}},['connectionId','loras']),
 'Settings':obj({'revision':integer,'connections':array(S('Connection')),'assignmentMode':{'enum':['auto','manual']},'primary':{'anyOf':[S('Assignment'),{'type':'null'}]},'roles':{'type':'object','additionalProperties':{'anyOf':[S('Assignment'),{'type':'null'}]}},'comfy':S('ComfySelection'),'enhancementInstruction':string,'qc':obj({'minSimilarity':{'type':'number','minimum':0,'maximum':1},'minSharpness':{'type':'number','exclusiveMinimum':0},'maxBadFraction':{'type':'number','minimum':0,'exclusiveMaximum':1}},['minSimilarity','minSharpness','maxBadFraction'])},['revision','connections','assignmentMode','roles','comfy','enhancementInstruction','qc']),
 'Segment':obj({'id':string,'title':string,'prompt':string,'duration':{'type':'integer','minimum':1,'maximum':15},'expectsFaces':boolean,'continuous':boolean},['id','title','prompt','duration']),
 'Plan':obj({'segments':array(S('Segment'))},['segments']),
@@ -50,6 +51,10 @@ for provider in ['codex','xai']:route('/api/auth/'+provider,'post',provider+' �
 route('/api/auth/codex','get','OpenAI 구독 인증 상태')
 route('/api/auth/codex/{id}','get','OpenAI 로그인 요청별 승인 상태')
 route('/api/auth/xai/{id}','get','xAI 로그인 진행 상태')
+paths['/api/auth/xai']['post']['description']='Framepop이 xAI discovery와 device/token endpoint를 직접 호출한다. OpenClaw 설치·런타임·계정 파일을 사용하지 않는다. 신규 요청은 이전 승인 대기를 취소한다. token/refresh token은 서버 내부에만 저장한다.'
+paths['/api/auth/xai']['post']['responses']['200']['content']['application/json']['schema']=S('AuthSession')
+paths['/api/auth/xai/{id}']['get']['responses']['200']['content']['application/json']['schema']=S('AuthSession')
+paths['/api/jobs']['post']['description']+=' 영상은 MiniMax H3 FL2VA, 24fps, 17k+5 프레임 규칙을 사용한다. 15초는 362프레임을 생성해 720p/정확한 길이로 편집한다. 각 구간 Face QC 통과 후 다음 구간을 실행한다. 사용자가 워크플로우 JSON을 제공하지 않는다.'
 route('/media/{filename}','get','보호된 이미지·영상 파일')
 paths['/media/{filename}']['get']['parameters'] += [{'name':'Range','in':'header','schema':string}]
 paths['/media/{filename}']['get']['responses']={'200':{'description':'전체 미디어'},'206':{'description':'byte range'},'401':{'description':'접속 코드 필요'},'416':{'description':'잘못된 범위'}}

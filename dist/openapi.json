@@ -555,7 +555,7 @@
     "/api/jobs": {
       "post": {
         "summary": "작업 실행",
-        "description": "plan/revise/video는 projectId 필수. 같은 프로젝트의 동시 작업은 차단. revise는 constraints를 받아 전체 story/plot/timeline을 재생성. enhance는 target과 prompt 또는 profile 필요. image는 prompt 필수. profile/reference는 선택. video는 승인된 최신 plan 필요. recommend는 전역 선택 LoRA의 출처·강도를 확인.",
+        "description": "plan/revise/video는 projectId 필수. 같은 프로젝트의 동시 작업은 차단. revise는 constraints를 받아 전체 story/plot/timeline을 재생성. enhance는 target과 prompt 또는 profile 필요. image는 prompt 필수. profile/reference는 선택. video는 승인된 최신 plan 필요. recommend는 전역 선택 LoRA의 출처·강도를 확인. 영상은 MiniMax H3 FL2VA, 24fps, 17k+5 프레임 규칙을 사용한다. 15초는 362프레임을 생성해 720p/정확한 길이로 편집한다. 각 구간 Face QC 통과 후 다음 구간을 실행한다. 사용자가 워크플로우 JSON을 제공하지 않는다.",
         "responses": {
           "202": {
             "description": "Success",
@@ -963,14 +963,14 @@
     "/api/auth/xai": {
       "post": {
         "summary": "xai 구독 device 로그인 시작",
-        "description": "",
+        "description": "Framepop이 xAI discovery와 device/token endpoint를 직접 호출한다. OpenClaw 설치·런타임·계정 파일을 사용하지 않는다. 신규 요청은 이전 승인 대기를 취소한다. token/refresh token은 서버 내부에만 저장한다.",
         "responses": {
           "200": {
             "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuthSession"
                 }
               }
             }
@@ -1076,7 +1076,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuthSession"
                 }
               }
             }
@@ -1213,6 +1213,43 @@
           "model"
         ]
       },
+      "AuthSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "failed",
+              "expired",
+              "cancelled"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "code": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "expiresAt": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
       "Connection": {
         "type": "object",
         "properties": {
@@ -1282,6 +1319,24 @@
             ]
           },
           "imageModel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "textEncoder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vae": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "audioVae": {
             "type": [
               "string",
               "null"

@@ -10,7 +10,7 @@ import { complete, task, assertRoute } from "../server/llm.mjs";
 import { buildGraph, execute } from "../server/comfy.mjs";
 import { verifyRecommendation } from "../server/recommend.mjs";
 import { createApp } from "../server/index.mjs";
-import { command, qc } from "../server/media.mjs";
+import { command, qc, trimVideo, lastFrame } from "../server/media.mjs";
 const temp = () => mkdtemp(join(tmpdir(), "framepop-test-"));
 const settings = () => ({
   ...defaults(),
@@ -27,7 +27,7 @@ const settings = () => ({
   ],
   comfy: {
     connectionId: "gpu",
-    model: "wan2.2_ti2v_5B_fp16.safetensors",
+    model: "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
     loras: [],
   },
 });
@@ -77,10 +77,15 @@ const nodes = Object.fromEntries(
   [
     "UNETLoader",
     "LoraLoaderModelOnly",
-    "ModelSamplingSD3",
+    "RandomNoise",
+    "BasicGuider",
+    "KSamplerSelect",
+    "BasicScheduler",
+    "SamplerCustomAdvanced",
+    "VAEDecodeAudio",
     "CLIPLoader",
     "VAELoader",
-    "Wan22ImageToVideoLatent",
+    "MiniMaxH3ImageToVideo",
     "LoadImage",
     "CLIPTextEncode",
     "KSampler",
@@ -97,11 +102,17 @@ const inventory = {
   revision: "r1",
   nodes,
   models: [
-    { name: "wan2.2_ti2v_5B_fp16.safetensors", type: "diffusion_models" },
+    {
+      name: "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      type: "diffusion_models",
+    },
   ],
   loras: ["a", "b"],
-  textEncoders: ["umt5_xxl_fp8_e4m3fn_scaled.safetensors"],
-  vaes: ["wan2.2_vae.safetensors"],
+  textEncoders: ["qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"],
+  vaes: [
+    "minimax_h3_video_vae_fp16.safetensors",
+    "minimax_h3_audio_vae_fp32.safetensors",
+  ],
   assets: [],
 };
 test("timeline rejects duration mismatch, duplicate IDs and lost exact edits", () => {
@@ -255,9 +266,9 @@ test("workflow applies multiple LoRAs in order with resolved strengths", () => {
   );
   assert.deepEqual(loras[1].inputs.model, ["2", 0]);
   assert.equal(
-    Object.values(graph).find((n) => n.class_type === "Wan22ImageToVideoLatent")
+    Object.values(graph).find((n) => n.class_type === "MiniMaxH3ImageToVideo")
       .inputs.length,
-    361,
+    362,
   );
   assert.throws(
     () =>
@@ -276,7 +287,10 @@ test("Comfy history resumes without duplicate submission; partial output is not 
   const url = await fixture(t, (req, res) => {
     if (req.method === "POST") posts++;
     res.setHeader("content-type", "application/json");
-    if(req.url==="/queue")return res.end(JSON.stringify({queue_running:[[0,"existing"]],queue_pending:[]}));
+    if (req.url === "/queue")
+      return res.end(
+        JSON.stringify({ queue_running: [[0, "existing"]], queue_pending: [] }),
+      );
     hits++;
     res.end(
       JSON.stringify({
@@ -430,7 +444,7 @@ test("real QC decodes all frames and never passes missing expected face", async 
 });
 
 test("LoRA requires exact source quotes, compatibility and a supported numeric range", () => {
-  const sources = [{ text: "Wan 2.2. Recommended strength 0.6 to 0.8." }],
+  const sources = [{ text: "MiniMax H3. Recommended strength 0.6 to 0.8." }],
     good = {
       compatible: true,
       sourceIndex: 0,
@@ -438,7 +452,7 @@ test("LoRA requires exact source quotes, compatibility and a supported numeric r
       min: 0.6,
       max: 0.8,
       quote: "Recommended strength 0.6 to 0.8.",
-      compatibilityQuote: "Wan 2.2",
+      compatibilityQuote: "MiniMax H3",
       triggers: [],
     };
   assert.equal(verifyRecommendation(good, sources), sources[0]);
@@ -453,4 +467,59 @@ test("LoRA requires exact source quotes, compatibility and a supported numeric r
     assert.throws(() => verifyRecommendation({ ...good, ...patch }, sources), {
       code: "RECOMMENDATION_UNVERIFIED",
     });
+});
+
+test("H3 output is 720p/24fps at exact timeline length and boundary uses the final frame", async (t) => {
+  const dir = await temp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const source = join(dir, "source.mp4"),
+    clip = join(dir, "clip.mp4");
+  await command("ffmpeg", [
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc2=size=128x72:rate=24",
+    "-t",
+    "1.2",
+    "-c:v",
+    "libx264",
+    source,
+  ]);
+  await trimVideo(source, clip, 1);
+  const probe = JSON.parse(
+    await command("ffprobe", [
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=width,height,r_frame_rate,nb_frames",
+      "-of",
+      "json",
+      clip,
+    ]),
+  );
+  assert.deepEqual(probe.streams[0], {
+    width: 1280,
+    height: 720,
+    r_frame_rate: "24/1",
+    nb_frames: "24",
+  });
+  const boundary = join(dir, "boundary.png"),
+    expected = join(dir, "expected.png");
+  await lastFrame(clip, boundary);
+  await command("ffmpeg", [
+    "-v",
+    "error",
+    "-i",
+    clip,
+    "-vf",
+    "select=eq(n\\,23)",
+    "-frames:v",
+    "1",
+    expected,
+  ]);
+  assert.deepEqual(await readFile(boundary), await readFile(expected));
 });

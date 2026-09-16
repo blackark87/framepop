@@ -17,20 +17,22 @@ HOST=0.0.0.0 PORT=5173 npm start
 ## 연결 순서
 
 1. **설정 → 계정·서버**에서 Ollama, LM Studio, ComfyUI 또는 구독 계정을 등록합니다. 등록된 실제 주소만 사용합니다. Ollama/LM Studio는 기본 서버 주소를 입력합니다(`/v1` 접미사 제외).
-2. OpenAI는 설치된 **Codex app-server의 ChatGPT 구독 로그인**을 사용합니다. xAI는 설치된 **OpenClaw의 xAI device OAuth 런타임**을 사용합니다. xAI 계정의 구독 자격과 런타임 버전에 따라 이용 가능 여부가 달라집니다. API 키로 자동 대체하지 않습니다. Linux 등에서는 `FRAMEPOP_OPENCLAW_XAI_DIR`로 `xai-oauth.js`, `provider-catalog.js`가 있는 디렉터리를 지정합니다.
+2. OpenAI는 설치된 **Codex app-server의 ChatGPT 구독 로그인**을 사용합니다. xAI는 **Framepop 자체 device OAuth**로 연결합니다. Framepop이 xAI의 인증 서버에서 기기 코드를 발급받고 승인 확인·토큰 저장·갱신을 직접 처리합니다. OpenClaw 설치·실행·계정 파일은 사용하지 않습니다. 공개된 xAI 공유 OAuth 클라이언트와 프로토콜을 참고했으며 동의 화면에는 Grok Build가 표시될 수 있습니다. 승인 후 구독 전용 `/models`와 `/responses`를 사용하며 API 키로 자동 대체하지 않습니다.
 구독 종류를 선택하면 서버 주소·토큰 입력 대신 **구독으로 연결** 버튼이 표시됩니다. 로그인 페이지에서 기기 코드를 승인하면 해당 요청의 완료를 확인하고 모델 목록을 자동으로 가져옵니다. 실패·시간 초과 시 같은 화면에서 다시 로그인할 수 있습니다.
 
 3. 로컬 서버는 **모델 조회** 후 **역할 배정**에서 Primary 자동 배정 또는 작업별 수동 모델을 저장합니다. 자동일 때 수동 선택은 비활성화되며 기존 수동값을 보존합니다. 이미지·비디오 강화 담당은 Ollama/LM Studio만 허용됩니다. 로컬 전용 프로젝트는 Primary를 포함해 외부 모델을 호출하지 않습니다. 혼합 프로젝트의 자동 배정은 역할명·후보 목록만 Primary에 보낸 뒤 담당 모델에 해당 작업을 보냅니다.
 4. **ComfyUI 자산**에서 설치 목록을 조회해 사용할 이미지/영상 모델과 복수 LoRA를 선택합니다. 강도 입력창은 없습니다. 이미지용·영상용 LoRA 선택은 별도로 저장합니다.
 5. **프롬프트 강화**에서 공통 지시를 관리합니다. 레퍼런스는 프로파일 없이 프롬프트만으로 만들 수 있습니다. 프로파일만 있다면 먼저 강화를 실행합니다.
 
-OpenClaw HTTP 연결을 별도로 쓰는 경우 `/v1/chat/completions`를 활성화하고, 파일·셸·외부 전송 도구가 없는 전용 에이전트로 운영해야 합니다. OpenAI/xAI 직접 구독 연결에는 이 HTTP 게이트웨이가 필요하지 않습니다.
-
 ## 자동 생성과 검수
 
 시놉시스 분석 → 플롯·스토리 → 타임라인 → 정합성 검토를 각각 담당 모델에 요청합니다. 구간 추가·삭제·이동·수정 시 LLM이 이야기를 다시 구성합니다. 수정한 ID·순서·내용·길이와 전체 재생 시간은 서버가 별도로 검증합니다. 검증 실패 시 기존 결과를 보존하고, 수정 결과가 확정되기 전 영상 생성을 막습니다.
 
-영상은 **강화 → 자동 워크플로우 구성 → ComfyUI 생성 → Face QC·연결부 검사 → 통과 후 다음 구간** 순서입니다. 현재 영상 실행 구성은 ComfyUI 공식 **Wan 2.2 TI2V 5B** 템플릿을 기반으로 합니다. 다른 영상 모델은 이름만 바꿔 실행하지 않고 지원되지 않는 모델로 표시합니다. 서버의 해당 노드, `umt5_xxl_fp8_e4m3fn_scaled.safetensors`, `wan2.2_vae.safetensors`가 필요합니다. 15초 구간은 24fps에 맞춰 생성하고 실제 파일 길이를 검증합니다. 길이·해상도에 필요한 VRAM은 실제 서버에서 확인해야 합니다.
+영상은 **강화 → 자동 워크플로우 구성 → ComfyUI 생성 → Face QC·연결부 검사 → 통과 후 다음 구간** 순서입니다. 영상 모델은 **MiniMax H3 FL2VA**입니다. ComfyUI 공식 H3 구성의 기본 20-step `res_multistep` 경로를 사용하며, 사용자가 선택한 복수 LoRA를 검증된 강도로 연결합니다. Turbo LoRA는 자동으로 추가하지 않습니다. 워크플로우 JSON을 제공할 필요는 없습니다.
+
+원격 서버에는 `MiniMaxH3ImageToVideo`, `SamplerCustomAdvanced`, `BasicGuider`, `VAEDecodeAudio` 등 공식 H3 노드와 FL2VA diffusion model, H3용 Qwen3-VL 인코더, 영상·오디오 VAE가 필요합니다. 설치 목록에서 실제 파일을 확인해 구성하며 모호한 인코더·VAE는 전역 ComfyUI 자산 설정에서 고를 수 있습니다. H3는 1344×768, 24fps, `17k+5` 프레임 간격으로 생성합니다. 15초 구간은 362프레임을 생성한 뒤 1280×720/24fps의 정확한 구간 길이로 편집합니다. 5초 미만 구간은 학습 범위에 맞춰 최소 124프레임을 생성한 뒤 자릅니다. 최종 합본의 음성·음악 편집은 기존 범위 밖이며 현재 구간 출력은 무음입니다.
+
+첫 구간은 이미지 없이 생성할 수 있고, 레퍼런스가 있으면 첫 프레임으로 사용합니다. 연속 구간은 QC를 통과한 이전 구간의 끝 프레임을 사용합니다. 그래프 생성기는 첫·마지막 프레임을 모두 지원하지만 마지막 프레임 자동 제작은 아직 연결하지 않았습니다. 이전 Wan 작업의 그래프를 H3 작업으로 재개하지 않습니다.
 
 이미지는 현재 표준 ComfyUI checkpoint/KSampler 경로입니다. 별도 conditioning이 필요한 모델은 별도 실행 구성이 필요합니다. Grok Imagine/GPT 이미지의 구독 기반 생성 경로는 아직 연결하지 않았습니다. 이미지 서비스 계정·지원 모델이 확인되기 전 임의 모델명으로 호출하지 않습니다.
 
@@ -52,12 +54,13 @@ Face QC는 OpenCV YuNet/SFace로 모든 디코딩 프레임의 얼굴 검출·�
 npm test
 ```
 
-자동 검증은 실제 HTTP 어댑터와 격리된 테스트 서버, SQLite, FFmpeg 및 OpenCV를 사용합니다. QC 실패 후 다음 구간 차단, 해당 구간 재시도, 정확한 수정 보존, 중복 제출, 상태 복구, iPhone 영상 Range 응답을 검사합니다. 외부 GPU/로컬 모델 서버와 xAI 로그인을 이용한 종단 검증은 연결값이 필요합니다. 현재 환경에서 OpenAI 구독 GPT-5.5의 실제 JSON 응답, 12개 자동 테스트, 기준 이미지와 동일한 얼굴의 24프레임 검수 통과를 확인했습니다. 브라우저는 430×932 및 1440×1000 크기로 확인했으며 실제 iOS Safari 기기 검사는 별도입니다.
+자동 검증은 실제 HTTP 어댑터와 격리된 테스트 서버, SQLite, FFmpeg 및 OpenCV를 사용합니다. QC 실패 후 다음 구간 차단, 해당 구간 재시도, 정확한 수정 보존, 중복 제출, 상태 복구, iPhone 영상 Range 응답을 검사합니다. xAI 인증 서버의 discovery 조회와 실제 기기 코드 발급(HTTP 200)은 OpenClaw 없이 확인했습니다. 외부 GPU/로컬 모델 서버와 승인된 xAI 구독 호출의 종단 검증은 연결값과 사용자 로그인이 필요합니다. 현재 환경에서 OpenAI 구독 GPT-5.5의 실제 JSON 응답, 자동 테스트, 기준 이미지와 동일한 얼굴의 24프레임 검수 통과를 확인했습니다. 브라우저는 430×932 및 1440×1000 크기로 확인했으며 실제 iOS Safari 기기 검사는 별도입니다.
 
 ## 구현 근거
 
 - [ComfyUI 서버 API](https://docs.comfy.org/development/comfyui-server/comms_routes)
-- [공식 Wan 2.2 5B 템플릿](https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_wan2_2_5B_ti2v.json)
+- [공식 H3 FL2VA 템플릿](https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_minimax_h3_i2v.json)
+- [ComfyUI H3 노드 구현](https://github.com/Comfy-Org/ComfyUI/blob/master/comfy_extras/nodes_minimax_h3.py)
 - [Codex app-server](https://developers.openai.com/codex/app-server)
 - [OpenClaw xAI 구독 인증](https://docs.openclaw.ai/providers/xai)
 - [Ollama Chat API](https://docs.ollama.com/api/chat)

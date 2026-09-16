@@ -45,6 +45,55 @@ export async function inventory(c, signal) {
     hashSupport: assets.length > 0,
   };
 }
+// Comfy-Org workflow_templates/video_minimax_h3_i2v.json, non-Turbo path.
+export function h3Selection(inv, selected) {
+  need(
+    /minimax[_-]h3.*fl2va/i.test(selected.model || "") &&
+      inv.models.some(
+        (m) => m.name === selected.model && m.type === "diffusion_models",
+      ),
+    "영상 모델은 MiniMax H3 FL2VA 파일을 선택하세요.",
+    "UNSUPPORTED_MODEL",
+  );
+  const choose = (value, files, pattern, preferred, label) => {
+    const candidates = files.filter((n) => pattern.test(n));
+    const found =
+      value ||
+      candidates.find((n) => n.split("/").pop() === preferred) ||
+      (candidates.length === 1 ? candidates[0] : null);
+    need(
+      found && candidates.includes(found),
+      `${label} 파일을 확인하세요. 설정 → ComfyUI 자산에서 선택할 수 있습니다.`,
+      "MISSING_MODEL",
+    );
+    return found;
+  };
+  return {
+    ...selected,
+    workflow: "minimax-h3-fl2va-v1",
+    textEncoder: choose(
+      selected.textEncoder,
+      inv.textEncoders,
+      /qwen3.*minimax[_-]h3/i,
+      "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "H3 텍스트 인코더",
+    ),
+    vae: choose(
+      selected.vae,
+      inv.vaes,
+      /minimax[_-]h3[_-]video[_-]vae/i,
+      "minimax_h3_video_vae_fp16.safetensors",
+      "H3 영상 VAE",
+    ),
+    audioVae: choose(
+      selected.audioVae,
+      inv.vaes,
+      /minimax[_-]h3[_-]audio[_-]vae/i,
+      "minimax_h3_audio_vae_fp32.safetensors",
+      "H3 오디오 VAE",
+    ),
+  };
+}
 export function buildGraph({
   kind,
   inventory: inv,
@@ -55,6 +104,7 @@ export function buildGraph({
   fps = 24,
   seed = 0,
   startImage,
+  endImage,
   referenceImage,
 }) {
   let g = {},
@@ -107,45 +157,65 @@ export function buildGraph({
       latent = add("VAEEncode", { pixels: image, vae });
     }
   } else {
+    selection = h3Selection(inv, selection);
     need(
-      /wan2[._]2.*(?:ti2v|5b)/i.test(file),
-      "이 모델의 실행 구성은 아직 지원하지 않습니다. 현재 영상 구성은 Wan 2.2 TI2V 5B입니다.",
-      "UNSUPPORTED_MODEL",
-    );
-    need(
-      inv.textEncoders.includes(selection.textEncoder),
-      "Wan 텍스트 인코더가 없습니다.",
-      "MISSING_MODEL",
-    );
-    need(
-      inv.vaes.includes(selection.vae),
-      "Wan VAE가 없습니다.",
-      "MISSING_MODEL",
+      fps === 24 && Number.isFinite(seconds) && seconds > 0 && seconds <= 15,
+      "H3 영상은 24fps, 구간당 최대 15초로 생성합니다.",
+      "INVALID_INPUT",
     );
     model = add("UNETLoader", { unet_name: file, weight_dtype: "default" });
-    for (const l of selection.loras || [])
+    for (const l of selection.loras || []) {
+      need(
+        inv.loras.includes(l.name) && Number.isFinite(l.strength),
+        "LoRA 파일과 확인된 권장 강도가 필요합니다.",
+        "MISSING_MODEL",
+      );
       model = add("LoraLoaderModelOnly", {
         model,
         lora_name: l.name,
         strength_model: l.strength,
       });
-    model = add("ModelSamplingSD3", { model, shift: 8 });
+    }
     clip = add("CLIPLoader", {
       clip_name: selection.textEncoder,
-      type: "wan",
+      type: "minimax",
       device: "default",
     });
     vae = add("VAELoader", { vae_name: selection.vae });
-    const inputs = {
-      vae,
-      width: 1280,
-      height: 704,
-      length: Math.ceil((seconds * fps) / 4) * 4 + 1,
-      batch_size: 1,
-    };
+    const audioVae = add("VAELoader", { vae_name: selection.audioVae });
+    // H3 trained range starts near 5 seconds; shorter timeline clips are trimmed.
+    const length = Math.ceil((Math.max(5, seconds) * fps - 5) / 17) * 17 + 5;
+    const inputs = { clip, vae, prompt, width: 1344, height: 768, length };
     if (startImage)
-      inputs.start_image = add("LoadImage", { image: startImage });
-    latent = add("Wan22ImageToVideoLatent", inputs);
+      inputs.first_frame = add("LoadImage", { image: startImage });
+    if (endImage) inputs.last_frame = add("LoadImage", { image: endImage });
+    const conditioning = add("MiniMaxH3ImageToVideo", inputs);
+    const noise = add("RandomNoise", { noise_seed: seed });
+    const guider = add("BasicGuider", { model, conditioning });
+    const sampler = add("KSamplerSelect", { sampler_name: "res_multistep" });
+    const sigmas = add("BasicScheduler", {
+      model,
+      scheduler: "simple",
+      steps: 20,
+      denoise: 1,
+    });
+    const samples = add("SamplerCustomAdvanced", {
+      noise,
+      guider,
+      sampler,
+      sigmas,
+      latent_image: [conditioning[0], 1],
+    });
+    const images = add("VAEDecode", { samples, vae });
+    const audio = add("VAEDecodeAudio", { samples, vae: audioVae });
+    const video = add("CreateVideo", { images, audio, fps });
+    add("SaveVideo", {
+      video,
+      filename_prefix: "Framepop/" + randomUUID(),
+      format: "mp4",
+      codec: "h264",
+    });
+    return g;
   }
   const positive = add("CLIPTextEncode", { clip, text: prompt }),
     neg = add("CLIPTextEncode", { clip, text: negative });
@@ -155,24 +225,14 @@ export function buildGraph({
     negative: neg,
     latent_image: latent,
     seed,
-    steps: kind === "image" ? 25 : 20,
-    cfg: kind === "image" ? 6 : 5,
-    sampler_name: kind === "image" ? "euler" : "uni_pc",
-    scheduler: kind === "image" ? "normal" : "simple",
+    steps: 25,
+    cfg: 6,
+    sampler_name: "euler",
+    scheduler: "normal",
     denoise: referenceImage ? 0.75 : 1,
   });
   const images = add("VAEDecode", { samples: sampled, vae });
-  if (kind === "image")
-    add("SaveImage", { images, filename_prefix: "Framepop/" + randomUUID() });
-  else {
-    const video = add("CreateVideo", { images, fps });
-    add("SaveVideo", {
-      video,
-      filename_prefix: "Framepop/" + randomUUID(),
-      format: "mp4",
-      codec: "h264",
-    });
-  }
+  add("SaveImage", { images, filename_prefix: "Framepop/" + randomUUID() });
   return g;
 }
 export async function upload(c, buffer, filename, signal) {

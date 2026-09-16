@@ -4,7 +4,14 @@ import { resolve } from "node:path";
 import { id } from "./store.mjs";
 import { AppError, need } from "./http.mjs";
 import { task, connection } from "./llm.mjs";
-import { inventory, buildGraph, execute, output, upload } from "./comfy.mjs";
+import {
+  inventory,
+  h3Selection,
+  buildGraph,
+  execute,
+  output,
+  upload,
+} from "./comfy.mjs";
 import { recommend } from "./recommend.mjs";
 import { trimVideo, lastFrame, qc, command } from "./media.mjs";
 export function validatePlan(plan, duration, constraints = []) {
@@ -380,16 +387,23 @@ export class Jobs extends EventEmitter {
     const c = connection(j.settings, j.settings.comfy.connectionId);
     need(c.kind === "comfy", "ComfyUI 연결이 필요합니다.");
     const inv = await this.comfy.inventory(c, ctx.signal);
-    const selected = structuredClone(j.input.selection || j.settings.comfy);
+    let selected = structuredClone(j.input.selection || j.settings.comfy);
     if (j.kind === "image" || j.input.target === "image") {
       selected.model = selected.imageModel || null;
       selected.loras = selected.imageLoras || [];
     }
-    selected.textEncoder ||= inv.textEncoders.find(
-      (n) => n === "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
-    );
-    selected.vae ||= inv.vaes.find((n) => n === "wan2.2_vae.safetensors");
     need(selected.model, "사용할 ComfyUI 모델을 선택하세요.", "MISSING_MODEL");
+    if (j.kind !== "image" && j.input?.target !== "image")
+      selected = h3Selection(inv, selected);
+    if (
+      j.kind === "video" &&
+      j.snapshot &&
+      j.snapshot.workflow !== "minimax-h3-fl2va-v1"
+    )
+      throw new AppError(
+        "UNSUPPORTED_MODEL",
+        "이전 Wan 작업은 H3로 재개할 수 없습니다. H3 모델을 선택해 새로 실행하세요.",
+      );
     const resolved =
       j.snapshot || (await recommend(j.settings, inv, selected, ctx));
     if (j.snapshot)
